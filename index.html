@@ -1,0 +1,2077 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <title>De la feuille d'arbre à la feuille de papier — TFE Tim Lombet 2026</title>
+  <meta name="description" content="De la feuille d'arbre à la feuille de papier — TFE Tim Lombet, Option Infographie, Mariemont 2026." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <script src="./data_cover.js" onerror="window.__COVER_LOAD_ERR=true"></script>
+  <script src="./data_interior.js" onerror="window.__INTERIOR_LOAD_ERR=true"></script>
+
+  <style>
+    /* ─────────────────────────────────────────
+       RESET & TOKENS
+    ───────────────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0; padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --c-bg:        #0a0a0f;
+      --c-surface:   #13131a;
+      --c-border:    rgba(255,255,255,0.07);
+      --c-text:      #ededf0;
+      --c-muted:     #8b8b96;
+      --c-accent:    #c84330;
+      --c-accent-2:  #e85540;
+      --c-paper:     #fdfdfc;
+      --c-paper-s:   #faf4e8;    /* sepia paper */
+
+      --shadow-page: 0 24px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.05);
+      --shadow-hud:  0 8px 40px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.06);
+
+      --glass-bg:    rgba(13,13,20,0.82);
+      --glass-border:rgba(255,255,255,0.08);
+
+      --radius-sm:   8px;
+      --radius-md:   14px;
+      --radius-lg:   24px;
+      --radius-pill: 999px;
+
+      --font-ui:     'Inter', system-ui, sans-serif;
+      --font-serif:  'Playfair Display', Georgia, serif;
+
+      --hud-h:       60px;
+      --hud-h-sm:    52px;
+      --bar-safe:    env(safe-area-inset-bottom, 0px);
+      --bar-safe-t:  env(safe-area-inset-top, 0px);
+
+      --trans-fast:  0.2s cubic-bezier(0.4,0,0.2,1);
+      --trans-med:   0.38s cubic-bezier(0.25,1,0.5,1);
+      --trans-slow:  0.55s cubic-bezier(0.25,1,0.4,1);
+    }
+
+    /* Sepia theme */
+    body.t-sepia {
+      --c-bg:        #f2ece0;
+      --c-surface:   #ede6d6;
+      --c-border:    rgba(0,0,0,0.07);
+      --c-text:      #2a2520;
+      --c-muted:     #7a7368;
+      --c-accent:    #9e3d28;
+      --c-accent-2:  #b84d35;
+      --glass-bg:    rgba(238,232,218,0.88);
+      --glass-border:rgba(0,0,0,0.07);
+      --shadow-page: 0 20px 60px rgba(60,40,20,0.2), 0 0 0 1px rgba(0,0,0,0.06);
+      --shadow-hud:  0 6px 24px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,.4);
+    }
+
+    /* Light theme */
+    body.t-light {
+      --c-bg:        #f5f6f8;
+      --c-surface:   #ffffff;
+      --c-border:    rgba(0,0,0,0.07);
+      --c-text:      #111318;
+      --c-muted:     #6b7280;
+      --c-accent:    #c84330;
+      --c-accent-2:  #b03221;
+      --glass-bg:    rgba(255,255,255,0.88);
+      --glass-border:rgba(0,0,0,0.07);
+      --shadow-page: 0 16px 48px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.06);
+      --shadow-hud:  0 6px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,.8);
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: var(--font-ui);
+      background-color: var(--c-bg);
+      color: var(--c-text);
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      flex-direction: column;
+      transition: background-color var(--trans-slow), color var(--trans-slow);
+    }
+
+    /* Ambient radial glow behind the book */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 55% at 50% 48%, rgba(200,67,48,.07) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+      transition: background var(--trans-slow);
+    }
+    body.t-sepia::after { background: radial-gradient(ellipse 70% 55% at 50% 48%, rgba(160,80,40,.05) 0%, transparent 70%); }
+    body.t-light::after { opacity: 0; }
+
+    /* ─────────────────────────────────────────
+       LAYOUT: TOP-BAR + READER + BOTTOM-BAR
+    ───────────────────────────────────────── */
+    #top-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--hud-h);
+      padding-top: var(--bar-safe-t);
+      background: var(--glass-bg);
+      border-bottom: 1px solid var(--glass-border);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-left: 20px;
+      padding-right: 20px;
+      gap: 12px;
+      z-index: 200;
+      box-shadow: var(--shadow-hud);
+      transition: transform var(--trans-med), opacity var(--trans-med),
+                  background var(--trans-slow), border-color var(--trans-slow);
+    }
+
+    #top-bar.hide {
+      transform: translateY(-110%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #bottom-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: calc(var(--hud-h) + var(--bar-safe));
+      padding-bottom: var(--bar-safe);
+      background: var(--glass-bg);
+      border-top: 1px solid var(--glass-border);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-left: 20px;
+      padding-right: 20px;
+      gap: 12px;
+      z-index: 200;
+      box-shadow: 0 -4px 30px rgba(0,0,0,.3), inset 0 -1px 0 rgba(255,255,255,.04);
+      transition: transform var(--trans-med), opacity var(--trans-med),
+                  background var(--trans-slow), border-color var(--trans-slow);
+    }
+
+    #bottom-bar.hide {
+      transform: translateY(110%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ─────────────────────────────────────────
+       TOP BAR CONTENT
+    ───────────────────────────────────────── */
+    .bar-group { display: flex; align-items: center; gap: 6px; }
+
+    .bar-title {
+      flex: 1;
+      text-align: center;
+      min-width: 0;
+    }
+    .bar-title h1 {
+      font-family: var(--font-serif);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--c-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+    }
+    .bar-title .bar-sub {
+      font-size: 10px;
+      color: var(--c-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-top: 1px;
+    }
+
+    /* Icon buttons */
+    .btn-icon {
+      width: 38px; height: 38px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--c-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background var(--trans-fast), color var(--trans-fast), transform var(--trans-fast);
+      flex-shrink: 0;
+    }
+    .btn-icon:hover { background: rgba(255,255,255,.06); color: var(--c-text); }
+    .btn-icon:active { transform: scale(.92); }
+    .btn-icon.on { color: var(--c-accent); background: rgba(200,67,48,.1); }
+    .t-sepia .btn-icon:hover, .t-light .btn-icon:hover { background: rgba(0,0,0,.06); }
+
+    /* ─────────────────────────────────────────
+       BOTTOM BAR: NAV + SCRUBBER + TOOLS
+    ───────────────────────────────────────── */
+    .nav-cluster {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .btn-nav {
+      width: 40px; height: 40px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--glass-border);
+      color: var(--c-text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background var(--trans-fast), transform var(--trans-fast), border-color var(--trans-fast);
+    }
+    .btn-nav:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.15); }
+    .btn-nav:active { transform: scale(.9); }
+    .t-sepia .btn-nav, .t-light .btn-nav { background: rgba(0,0,0,.04); border-color: var(--glass-border); }
+    .t-sepia .btn-nav:hover, .t-light .btn-nav:hover { background: rgba(0,0,0,.08); }
+
+    .page-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--c-text);
+      padding: 0 10px;
+      min-width: 72px;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .page-indicator .sep { color: var(--c-muted); font-weight: 400; }
+    .page-indicator #pg-total { color: var(--c-muted); }
+
+    /* Progress scrubber */
+    .scrubber-wrap {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      padding: 0 4px;
+    }
+
+    #scrubber {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.1);
+      outline: none;
+      cursor: pointer;
+      transition: background var(--trans-slow);
+    }
+    .t-sepia #scrubber, .t-light #scrubber { background: rgba(0,0,0,0.1); }
+
+    #scrubber::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--c-accent);
+      border: 3px solid var(--c-bg);
+      box-shadow: 0 2px 8px rgba(0,0,0,.4);
+      cursor: pointer;
+      transition: transform var(--trans-fast), background var(--trans-fast), border-color var(--trans-slow);
+    }
+    #scrubber::-webkit-slider-thumb:hover { transform: scale(1.25); background: var(--c-accent-2); }
+    #scrubber::-moz-range-thumb {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--c-accent);
+      border: 3px solid var(--c-bg);
+      cursor: pointer;
+    }
+
+    /* Tooltip over thumb */
+    #scrubber-tip {
+      position: absolute;
+      bottom: 28px;
+      transform: translateX(-50%);
+      background: var(--c-accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: var(--radius-pill);
+      pointer-events: none;
+      opacity: 0;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,.35);
+      transition: opacity var(--trans-fast), transform var(--trans-fast);
+      z-index: 10;
+    }
+    #scrubber-tip.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-3px);
+    }
+
+    /* ─────────────────────────────────────────
+       SIDEBAR / THUMBNAIL DRAWER
+    ───────────────────────────────────────── */
+    #sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.5);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 299;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--trans-med);
+    }
+    #sidebar-overlay.show { opacity: 1; pointer-events: all; }
+
+    /* Desktop: left side panel */
+    #sidebar {
+      position: fixed;
+      top: var(--hud-h);
+      bottom: calc(var(--hud-h) + var(--bar-safe));
+      left: 0;
+      width: 220px;
+      background: var(--glass-bg);
+      border-right: 1px solid var(--glass-border);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      transform: translateX(-100%);
+      transition: transform var(--trans-med), background var(--trans-slow);
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #sidebar.open { transform: translateX(0); }
+
+    .sidebar-hdr {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--glass-border);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--c-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .thumb-scroll {
+      flex: 1;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,.1) transparent;
+    }
+    .thumb-scroll::-webkit-scrollbar { width: 4px; }
+    .thumb-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
+
+    .thumb-item {
+      border: 1px solid var(--c-border);
+      border-radius: var(--radius-sm);
+      padding: 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: border-color var(--trans-fast), transform var(--trans-fast), background var(--trans-fast);
+      background: rgba(255,255,255,.02);
+    }
+    .thumb-item:hover { border-color: rgba(200,67,48,.4); transform: translateY(-2px); }
+    .thumb-item.active { border-color: var(--c-accent); background: rgba(200,67,48,.08); }
+
+    .thumb-canvas-box {
+      width: 100%;
+      height: 120px;
+      background: rgba(0,0,0,.2);
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .thumb-canvas-box canvas {
+      max-width: 100%; max-height: 100%;
+      display: block;
+    }
+    .thumb-lbl {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--c-muted);
+    }
+    .thumb-item.active .thumb-lbl { color: var(--c-accent); }
+
+    /* Mobile: bottom sheet drawer */
+    @media (max-width: 767px) {
+      #sidebar {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 240px;
+        transform: translateY(100%);
+        border-right: none;
+        border-top: 1px solid var(--glass-border);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      }
+      #sidebar.open { transform: translateY(0); }
+      .thumb-scroll {
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 10px 16px 16px;
+        gap: 10px;
+        scrollbar-width: none;
+      }
+      .thumb-scroll::-webkit-scrollbar { display: none; }
+      .thumb-item {
+        flex-shrink: 0;
+        width: 80px;
+      }
+      .thumb-canvas-box { height: 100px; }
+    }
+
+    /* ─────────────────────────────────────────
+       READING AREA
+    ───────────────────────────────────────── */
+    #reader {
+      position: fixed;
+      top: var(--hud-h);
+      bottom: calc(var(--hud-h) + var(--bar-safe));
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      z-index: 1;
+      transition: left var(--trans-med);
+    }
+    #reader.sidebar-pushed { left: 220px; }
+
+    /* Click zones — handled via JS on #reader directly */
+    #book-stage { cursor: pointer; }
+
+    /* ─────────────────────────────────────────
+       BOOK STAGE
+    ───────────────────────────────────────── */
+    #book-stage {
+      position: relative;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      transition: box-shadow var(--trans-slow);
+    }
+
+    /* The two page containers */
+    .page-pane {
+      background: var(--c-paper);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: background var(--trans-slow), width var(--trans-med), height var(--trans-med);
+      flex-shrink: 0;
+    }
+
+    body.t-sepia .page-pane { background: var(--c-paper-s); }
+
+    .page-pane canvas {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    /* Left page subtle fold gradient */
+    #pane-left {
+      border-radius: 8px 0 0 8px;
+    }
+    #pane-left::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to right, rgba(0,0,0,0) 80%, rgba(0,0,0,.12) 100%);
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* Right page fold gradient */
+    #pane-right {
+      border-radius: 0 8px 8px 0;
+    }
+    #pane-right::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to left, rgba(0,0,0,0) 80%, rgba(0,0,0,.12) 100%);
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* Single-page mode */
+    #pane-right.single { border-radius: 8px; }
+    #pane-right.single::after { display: none; }
+    #pane-left.single { display: none !important; }
+
+    /* Spine center strip */
+    #spine {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 10px;
+      height: 100%;
+      background: linear-gradient(to right,
+        rgba(0,0,0,.18) 0%,
+        rgba(0,0,0,.32) 40%,
+        rgba(0,0,0,.32) 60%,
+        rgba(0,0,0,.18) 100%);
+      pointer-events: none;
+      z-index: 6;
+      transition: opacity var(--trans-med);
+    }
+    #spine.hidden { opacity: 0; }
+
+    /* Page slide transition (single page mode) */
+    #slide-wrapper {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      display: none;
+      border-radius: 8px;
+      z-index: 8;
+    }
+    .slide-pane {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      will-change: transform, opacity;
+    }
+    .slide-pane canvas {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    /* 3D flip sheet (double page desktop) */
+    #flip-sheet {
+      position: absolute;
+      top: 0; height: 100%;
+      transform-style: preserve-3d;
+      display: none;
+      z-index: 50;
+      box-shadow: 20px 0 50px rgba(0,0,0,.45);
+    }
+    .flip-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      overflow: hidden;
+      background: var(--c-paper);
+    }
+    body.t-sepia .flip-face { background: var(--c-paper-s); }
+    .flip-back { transform: rotateY(180deg); }
+    .flip-face canvas { display: block; width: 100%; height: 100%; }
+    .flip-shadow {
+      position: absolute; inset: 0;
+      pointer-events: none; z-index: 6;
+      opacity: 0;
+      transition: opacity .5s;
+    }
+
+    @keyframes flip-fwd {
+      from { transform: perspective(2400px) rotateY(0deg); }
+      to   { transform: perspective(2400px) rotateY(-180deg); }
+    }
+    @keyframes flip-bwd {
+      from { transform: perspective(2400px) rotateY(-180deg); }
+      to   { transform: perspective(2400px) rotateY(0deg); }
+    }
+
+    /* ─────────────────────────────────────────
+       LOADER OVERLAY
+    ───────────────────────────────────────── */
+    #loader {
+      position: fixed;
+      inset: 0;
+      background: var(--c-bg);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      transition: opacity var(--trans-slow), background var(--trans-slow);
+    }
+    #loader.fade { opacity: 0; pointer-events: none; }
+    #loader.gone { display: none; }
+
+    .loader-ring {
+      width: 48px; height: 48px;
+      border: 3px solid rgba(255,255,255,.08);
+      border-top-color: var(--c-accent);
+      border-radius: 50%;
+      animation: spin .75s linear infinite;
+    }
+    .t-sepia .loader-ring, .t-light .loader-ring {
+      border-color: rgba(0,0,0,.08);
+      border-top-color: var(--c-accent);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loader-txt {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--c-muted);
+      letter-spacing: .04em;
+    }
+
+    /* Mini page-turn spinner (non-blocking) */
+    #mini-loader {
+      position: fixed;
+      bottom: calc(var(--hud-h) + var(--bar-safe) + 18px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: var(--radius-pill);
+      padding: 8px 18px 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 400;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--trans-fast);
+      white-space: nowrap;
+    }
+    #mini-loader.show { opacity: 1; }
+    .mini-ring {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,.12);
+      border-top-color: var(--c-accent);
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      flex-shrink: 0;
+    }
+    .mini-txt { font-size: 12px; font-weight: 500; color: var(--c-muted); }
+
+    /* ─────────────────────────────────────────
+       FALLBACK / ERROR CARD
+    ───────────────────────────────────────── */
+    #fallback {
+      position: fixed;
+      inset: 0;
+      z-index: 998;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: var(--c-bg);
+    }
+    #fallback.show { display: flex; }
+
+    .fallback-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--radius-lg);
+      padding: 36px 28px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 32px 64px rgba(0,0,0,.5);
+    }
+
+    .fallback-card h2 {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--c-text);
+    }
+
+    .fallback-card p {
+      font-size: 14px;
+      color: var(--c-muted);
+      line-height: 1.65;
+    }
+
+    .drop-zone {
+      width: 100%;
+      border: 2px dashed var(--c-border);
+      border-radius: var(--radius-md);
+      padding: 28px 16px;
+      color: var(--c-muted);
+      font-size: 13px;
+      cursor: pointer;
+      transition: border-color var(--trans-fast), background var(--trans-fast);
+    }
+    .drop-zone:hover, body.dragging .drop-zone { border-color: var(--c-accent); background: rgba(200,67,48,.05); }
+    .drop-zone svg { margin-bottom: 8px; opacity: .5; }
+
+    .btn-primary {
+      background: var(--c-accent);
+      color: #fff;
+      border: none;
+      padding: 12px 28px;
+      border-radius: var(--radius-pill);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: var(--font-ui);
+      cursor: pointer;
+      transition: background var(--trans-fast), transform var(--trans-fast), box-shadow var(--trans-fast);
+      box-shadow: 0 4px 16px rgba(200,67,48,.25);
+    }
+    .btn-primary:hover { background: var(--c-accent-2); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(200,67,48,.35); }
+    .btn-primary:active { transform: scale(.96); }
+
+    /* Drag overlay */
+    body.dragging::before {
+      content: 'Déposez le PDF ici';
+      position: fixed;
+      inset: 12px;
+      border: 2px dashed var(--c-accent);
+      border-radius: var(--radius-lg);
+      background: rgba(10,10,15,.88);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      z-index: 2000;
+      pointer-events: none;
+    }
+
+    /* ─────────────────────────────────────────
+       TOAST NOTIFICATION
+    ───────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: calc(var(--hud-h) + var(--bar-safe) + 12px);
+      left: 50%;
+      transform: translateX(-50%) translateY(8px);
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: var(--radius-pill);
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--c-text);
+      z-index: 600;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity var(--trans-fast), transform var(--trans-fast);
+      white-space: nowrap;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ─────────────────────────────────────────
+       DESKTOP EDGE ARROWS
+    ───────────────────────────────────────── */
+    .edge-arrow {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 50px;
+      height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--c-text);
+      opacity: .35;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      cursor: pointer;
+      z-index: 100;
+      transition: opacity var(--trans-med), background var(--trans-fast), transform var(--trans-fast), border-color var(--trans-slow);
+    }
+    .edge-arrow:hover { opacity: 1; background: rgba(200,67,48,.14); border-color: rgba(200,67,48,.3); }
+    .edge-arrow:active { transform: translateY(-50%) scale(.93); opacity: 1; }
+    #ea-prev { left: 0; border-radius: 0 10px 10px 0; }
+    #ea-next { right: 0; border-radius: 10px 0 0 10px; }
+
+    @media (max-width: 767px) {
+      .edge-arrow { display: none; }
+    }
+
+    /* ─────────────────────────────────────────
+       RESPONSIVE ADJUSTMENTS
+    ───────────────────────────────────────── */
+    @media (max-width: 767px) {
+      :root { --hud-h: var(--hud-h-sm); }
+      #top-bar { padding-left: 14px; padding-right: 14px; gap: 8px; }
+      #bottom-bar { padding-left: 14px; padding-right: 14px; gap: 8px; }
+      .bar-title h1 { font-size: 13px; }
+      .bar-title .bar-sub { display: none; }
+      #reader.sidebar-pushed { left: 0; } /* Don't shift on mobile */
+    }
+
+    @media (min-width: 1200px) {
+      :root { --hud-h: 64px; }
+    }
+
+    /* ─────────────────────────────────────────
+       EMPTY PAGE CANVAS PLACEHOLDER
+    ───────────────────────────────────────── */
+    .blank-page {
+      width: 100%; height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--c-paper);
+    }
+    body.t-sepia .blank-page { background: var(--c-paper-s); }
+    .blank-watermark {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-style: italic;
+      color: rgba(200,67,48,.1);
+      user-select: none;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <header id="top-bar" role="banner">
+    <div class="bar-group">
+      <button class="btn-icon" id="btn-index" title="Index des pages">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h10M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="bar-title">
+      <h1>De la feuille d'arbre à la feuille de papier</h1>
+      <div class="bar-sub">TFE — Tim Lombet · 2026</div>
+    </div>
+
+    <div class="bar-group">
+      <button class="btn-icon" id="btn-theme" title="Changer le thème">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9 9 0 1020.354 15.354z"/>
+        </svg>
+      </button>
+      <button class="btn-icon" id="btn-fs" title="Plein écran">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- READING AREA -->
+  <main id="reader" role="main" aria-label="Visionneuse de livre">
+
+    <!-- Book stage -->
+    <div id="book-stage">
+      <div id="spine"></div>
+      <div class="page-pane" id="pane-left">
+        <canvas id="cv-left"></canvas>
+      </div>
+      <div class="page-pane" id="pane-right">
+        <canvas id="cv-right"></canvas>
+        <!-- Slide transition wrapper (single page) -->
+        <div id="slide-wrapper">
+          <div class="slide-pane" id="sl-a"><canvas id="cv-sl-a"></canvas></div>
+          <div class="slide-pane" id="sl-b"><canvas id="cv-sl-b"></canvas></div>
+        </div>
+      </div>
+      <!-- 3D flip sheet (double page) -->
+      <div id="flip-sheet">
+        <div class="flip-face" id="ff-front">
+          <canvas id="cv-ff"></canvas>
+          <div class="flip-shadow" id="sh-front" style="background:linear-gradient(to right,transparent,rgba(0,0,0,.4))"></div>
+        </div>
+        <div class="flip-face flip-back" id="ff-back">
+          <canvas id="cv-fb"></canvas>
+          <div class="flip-shadow" id="sh-back" style="background:linear-gradient(to left,transparent,rgba(0,0,0,.4))"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- DESKTOP EDGE ARROWS -->
+  <div class="edge-arrow" id="ea-prev" role="button" aria-label="Page précédente">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+    </svg>
+  </div>
+  <div class="edge-arrow" id="ea-next" role="button" aria-label="Page suivante">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+    </svg>
+  </div>
+
+  <!-- BOTTOM BAR -->
+  <footer id="bottom-bar" role="contentinfo">
+    <div class="nav-cluster">
+      <button class="btn-nav" id="btn-prev" aria-label="Page précédente">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <div class="page-indicator">
+        <span id="pg-cur">1</span>
+        <span class="sep">/</span>
+        <span id="pg-total">—</span>
+      </div>
+      <button class="btn-nav" id="btn-next" aria-label="Page suivante">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="scrubber-wrap">
+      <input type="range" id="scrubber" min="1" max="1" value="1" aria-label="Naviguer dans le livre" />
+      <div id="scrubber-tip">Page 1</div>
+    </div>
+
+    <div class="bar-group">
+      <button class="btn-icon" id="btn-layout" title="Simple / Double page">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="2" y="3" width="9" height="18" rx="1"/>
+          <rect x="13" y="3" width="9" height="18" rx="1"/>
+        </svg>
+      </button>
+      <button class="btn-icon" id="btn-zoom-out" title="Dézoomer">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M8 11h6" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <button class="btn-icon" id="btn-zoom-in" title="Zoomer">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M11 8v6M8 11h6" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </footer>
+
+  <!-- SIDEBAR (thumbnails) -->
+  <div id="sidebar-overlay"></div>
+  <nav id="sidebar" aria-label="Index des pages">
+    <div class="sidebar-hdr">
+      <span>Index</span>
+      <span id="sb-total" style="opacity:.5">—</span>
+    </div>
+    <div class="thumb-scroll" id="thumb-scroll"></div>
+  </nav>
+
+  <!-- INITIAL LOADER -->
+  <div id="loader" role="status" aria-live="polite">
+    <div class="loader-ring"></div>
+    <div class="loader-txt" id="loader-txt">Chargement du livre…</div>
+  </div>
+
+  <!-- MINI LOADER (non-blocking page render) -->
+  <div id="mini-loader" aria-live="polite">
+    <div class="mini-ring"></div>
+    <span class="mini-txt" id="mini-txt">Rendu de la page…</span>
+  </div>
+
+  <!-- FALLBACK / ERROR -->
+  <div id="fallback" role="alertdialog" aria-modal="true" aria-label="Chargement requis">
+    <div class="fallback-card">
+      <svg width="48" height="48" fill="none" stroke="var(--c-accent)" stroke-width="1.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+      </svg>
+      <h2>De la feuille d'arbre à la feuille de papier</h2>
+      <p id="fallback-msg">Le fichier PDF n'a pas pu être chargé automatiquement.<br>Déposez le fichier PDF du TFE sur l'écran, ou sélectionnez-le ci-dessous.</p>
+      <div class="drop-zone" id="drop-zone" tabindex="0" role="button" aria-label="Zone de dépôt du fichier PDF">
+        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="display:block;margin:0 auto 6px">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+        </svg>
+        Glisser-déposer le PDF ici
+      </div>
+      <button class="btn-primary" id="btn-pick">Sélectionner un fichier PDF</button>
+    </div>
+  </div>
+
+  <input type="file" id="file-input" accept="application/pdf" style="display:none" />
+
+  <!-- TOAST -->
+  <div id="toast" role="alert" aria-live="assertive"></div>
+
+  <!-- ====================== SCRIPT ====================== -->
+  <script>
+  (function() {
+    'use strict';
+
+    // ── CONFIG ──────────────────────────────────────────
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+    const COVER_PDF_URL      = './tfe_web_cover.pdf';
+    const INTERIOR_PDF_URL   = './tfe_web_interieur.pdf';
+    const COVER_BACK_PDF_URL = './tfe_web_cover_back.pdf';
+
+    const THEMES = ['', 't-sepia', 't-light'];   // '' = dark
+    let themeIdx = 0;
+
+    // ── STATE ────────────────────────────────────────────
+    let coverDoc     = null;
+    let interiorDoc  = null;
+    let coverBackDoc = null;
+    let totalPages  = 0;
+    let curPage     = 1;
+    let zoom        = 1.0;
+    let isDouble    = true;    // two-page spread
+    let isFlipping  = false;
+    let hudVisible  = true;
+    let hudTimer    = null;
+    let sidebarOpen = false;
+    let pgW = 370, pgH = 540;   // nominal page size (recalculated)
+    let miniLoaderTimer = null;
+
+    // ── PAGE CACHE ───────────────────────────────────────
+    // Map<pageNum, ImageBitmap>  — instant display, no re-render
+    const pageCache = new Map();
+    const CACHE_RADIUS = 3;   // pre-render ± 3 pages around current
+    let renderQueue  = [];    // pending prefetch jobs
+    let renderBusy   = false;
+
+    function cacheKey(n) { return n; }
+
+    // Render a page off-screen and store as ImageBitmap (with safety checks for Safari)
+    function prerenderPage(n) {
+      if (n < 1 || n > totalPages) return Promise.resolve();
+      if (pageCache.has(n)) return Promise.resolve();
+      if (typeof createImageBitmap === 'undefined') return Promise.resolve();
+      return getPage(n).then(page => {
+        const scale = 2.0 * zoom;
+        const vp = page.getViewport({ scale });
+        const oc = document.createElement('canvas');
+        oc.width  = vp.width;
+        oc.height = vp.height;
+        const ctx = oc.getContext('2d');
+        return page.render({ canvasContext: ctx, viewport: vp }).promise.then(() => {
+          try {
+            return createImageBitmap(oc).then(bm => {
+              pageCache.set(n, bm);
+            }).catch(() => {});
+          } catch(e) {
+            return Promise.resolve();
+          }
+        });
+      }).catch(() => {});
+    }
+
+    // Draw a cached ImageBitmap onto a canvas element instantly (with robust try/catch for Safari)
+    function drawCached(n, canvas) {
+      const bm = pageCache.get(n);
+      if (!bm || !canvas) return false;
+      try {
+        canvas.width  = bm.width;
+        canvas.height = bm.height;
+        canvas.getContext('2d').drawImage(bm, 0, 0);
+        return true;
+      } catch (e) {
+        console.warn('drawCached drawImage error:', e);
+        return false; // Graceful fallback to live render
+      }
+    }
+
+    // Blank/watermark page (no PDF page)
+    function drawBlank(canvas) {
+      const scale = 2.0 * zoom;
+      canvas.width  = Math.round(pgW * scale);
+      canvas.height = Math.round(pgH * scale);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = document.body.classList.contains('t-sepia') ? '#faf4e8' : '#fdfdfc';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'rgba(200,67,48,0.07)';
+      ctx.font = `italic ${Math.round(canvas.height * .05)}px "Playfair Display", serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('Tim Lombet · TFE · 2026', canvas.width / 2, canvas.height / 2);
+    }
+
+    // Prefetch pages around n in background
+    function schedulePrefetch(n) {
+      renderQueue = [];
+      for (let d = 1; d <= CACHE_RADIUS; d++) {
+        if (n + d <= totalPages) renderQueue.push(n + d);
+        if (n - d >= 1)          renderQueue.push(n - d);
+      }
+      runQueue();
+    }
+
+    function runQueue() {
+      if (renderBusy || renderQueue.length === 0) return;
+      const n = renderQueue.shift();
+      if (pageCache.has(n)) { runQueue(); return; }
+      renderBusy = true;
+      prerenderPage(n).then(() => { renderBusy = false; runQueue(); });
+    }
+
+    // Evict old cache entries far from current page
+    function evictCache(curN) {
+      const keep = CACHE_RADIUS * 3;
+      pageCache.forEach((_, k) => {
+        if (Math.abs(k - curN) > keep) {
+          const bm = pageCache.get(k);
+          if (bm && bm.close) bm.close();
+          pageCache.delete(k);
+        }
+      });
+    }
+
+    // ── ELEMENTS ─────────────────────────────────────────
+    const $ = id => document.getElementById(id);
+    const topBar     = $('top-bar');
+    const bottomBar  = $('bottom-bar');
+    const reader     = $('reader');
+    const bookStage  = $('book-stage');
+    const paneLeft   = $('pane-left');
+    const paneRight  = $('pane-right');
+    const spine      = $('spine');
+    const slideWrap  = $('slide-wrapper');
+    const slA        = $('sl-a');
+    const slB        = $('sl-b');
+    const flipSheet  = $('flip-sheet');
+    const loader     = $('loader');
+    const loaderTxt  = $('loader-txt');
+    const miniLoader = $('mini-loader');
+    const miniTxt    = $('mini-txt');
+    const fallback   = $('fallback');
+    const toast      = $('toast');
+    const sidebar    = $('sidebar');
+    const sbOverlay  = $('sidebar-overlay');
+    const thumbScroll= $('thumb-scroll');
+    const pgCur      = $('pg-cur');
+    const pgTotal    = $('pg-total');
+    const sbTotal    = $('sb-total');
+    const scrubber   = $('scrubber');
+    const scrubTip   = $('scrubber-tip');
+
+    // ── HELPERS ──────────────────────────────────────────
+    function showToast(msg, dur = 2500) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), dur);
+    }
+
+    function setLoaderTxt(t) { loaderTxt.textContent = t; }
+
+    function showMiniLoader(t) {
+      clearTimeout(miniLoaderTimer);
+      miniTxt.textContent = t || 'Rendu…';
+      miniLoader.classList.add('show');
+    }
+    function hideMiniLoader() {
+      miniLoaderTimer = setTimeout(() => miniLoader.classList.remove('show'), 300);
+    }
+
+    function hideInitLoader() {
+      loader.classList.add('fade');
+      setTimeout(() => loader.classList.add('gone'), 600);
+    }
+
+    function showFallback(msg) {
+      if (msg) $('fallback-msg').innerHTML = msg;
+      hideInitLoader();
+      fallback.classList.add('show');
+    }
+
+    // ── HUD AUTO-HIDE ────────────────────────────────────
+    function scheduleHudHide(delay = 4000) {
+      clearTimeout(hudTimer);
+      hudTimer = setTimeout(() => {
+        if (!sidebarOpen) hideHud();
+      }, delay);
+    }
+
+    function showHud() {
+      topBar.classList.remove('hide');
+      bottomBar.classList.remove('hide');
+      hudVisible = true;
+      scheduleHudHide();
+    }
+
+    function hideHud() {
+      topBar.classList.add('hide');
+      bottomBar.classList.add('hide');
+      hudVisible = false;
+    }
+
+    function toggleHud() {
+      if (hudVisible) hideHud();
+      else showHud();
+    }
+
+    // Any interaction resets timer
+    function onInteraction() {
+      if (!hudVisible) showHud();
+      else scheduleHudHide();
+    }
+    document.addEventListener('pointermove', onInteraction, { passive: true });
+    document.addEventListener('pointerdown', onInteraction, { passive: true });
+
+    // ── SIDEBAR ──────────────────────────────────────────
+    function openSidebar() {
+      sidebarOpen = true;
+      sidebar.classList.add('open');
+      sbOverlay.classList.add('show');
+      if (window.innerWidth >= 768) {
+        reader.classList.add('sidebar-pushed');
+      }
+      $('btn-index').classList.add('on');
+      showHud(); clearTimeout(hudTimer); // keep HUD visible while sidebar open
+      setTimeout(resizeBook, 420);
+    }
+
+    function closeSidebar() {
+      sidebarOpen = false;
+      sidebar.classList.remove('open');
+      sbOverlay.classList.remove('show');
+      reader.classList.remove('sidebar-pushed');
+      $('btn-index').classList.remove('on');
+      scheduleHudHide(1500);
+      setTimeout(resizeBook, 420);
+    }
+
+    function toggleSidebar() {
+      if (sidebarOpen) closeSidebar(); else openSidebar();
+    }
+
+    sbOverlay.addEventListener('click', closeSidebar);
+
+    // ── THEME ────────────────────────────────────────────
+    function applyTheme() {
+      const saved = localStorage.getItem('vl-theme');
+      if (saved !== null) themeIdx = parseInt(saved) || 0;
+      document.body.className = THEMES[themeIdx] || '';
+    }
+
+    function cycleTheme() {
+      themeIdx = (themeIdx + 1) % THEMES.length;
+      localStorage.setItem('vl-theme', themeIdx);
+      document.body.className = THEMES[themeIdx] || '';
+      // Redraw blank left page watermark with new theme
+      renderActiveView();
+    }
+
+    // ── BASE64 → Uint8Array (robust, stack-safe) ─────────
+    function b64ToUint8(b64) {
+      const lut = new Uint8Array(256);
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+        .split('').forEach((c, i) => lut[c.charCodeAt(0)] = i);
+      const s   = b64.replace(/[^A-Za-z0-9+/]/g, '');
+      const len = s.length;
+      const buf = new Uint8Array(Math.floor(len * .75));
+      let p = 0;
+      for (let i = 0; i < len; i += 4) {
+        const a = lut[s.charCodeAt(i)];
+        const b = lut[s.charCodeAt(i+1)];
+        const c = lut[s.charCodeAt(i+2)];
+        const d = lut[s.charCodeAt(i+3)];
+        buf[p++] = (a << 2) | (b >> 4);
+        if (p < buf.length) buf[p++] = ((b & 15) << 4) | (c >> 2);
+        if (p < buf.length) buf[p++] = ((c & 3) << 6) | (d & 63);
+      }
+      return buf;
+    }
+
+    // ── PDF PAGE MAPPING ─────────────────────────────────
+    // Virtual page 1 = cover front, 2…N-1 = interior, N = cover back
+    function getPage(n) {
+      if (!coverDoc) return Promise.reject('not loaded');
+      if (coverDoc === interiorDoc) return interiorDoc.getPage(n);
+      if (n === 1)           return coverDoc.getPage(1);
+      if (n === totalPages)  return coverBackDoc ? coverBackDoc.getPage(1) : coverDoc.getPage(2);
+      if (coverBackDoc)      return interiorDoc.getPage(n); // skip page 1 (blank) of interior PDF
+      return interiorDoc.getPage(n - 1);
+    }
+
+    // ── SIZING & SPREAD MAPPING ──────────────────────────
+    function getSpread(n) {
+      if (n <= 1) return [null, 1];
+      if (n >= totalPages) return [totalPages, null];
+      
+      const isViewDouble = isDouble && (n > 1 && n < totalPages);
+      if (!isViewDouble) return [n, null];
+      
+      // Shifted section (n >= 9) to pair 9 & 10, and 25 & 26 together
+      const left = (n % 2 === 1) ? n : n - 1;
+      const right = left + 1;
+      return [left, right >= totalPages ? null : right];
+    }
+
+    function hudHeight() {
+      return (parseInt(getComputedStyle(document.documentElement)
+               .getPropertyValue('--hud-h')) || 60);
+    }
+
+    function resizeBook() {
+      const safeB = parseInt(getComputedStyle(document.documentElement)
+                    .getPropertyValue('--bar-safe')) || 0;
+      const topH   = hudHeight();
+      const botH   = topH + safeB;
+      const isMob  = window.innerWidth < 768;
+      const sideW  = (!isMob && sidebarOpen) ? 220 : 0;
+
+      const availW = window.innerWidth  - sideW - (isMob ? 20 : 40);
+      const availH = window.innerHeight - topH - botH - (isMob ? 16 : 32);
+
+      const ratio = pgW / pgH;
+      const [leftN, rightN] = getSpread(curPage);
+      const isViewDouble = (leftN !== null && rightN !== null);
+
+      if (isViewDouble) {
+        // Fit two pages side by side
+        let w, h;
+        if ((availW / availH) > (ratio * 2)) {
+          h = availH; w = h * ratio;
+        } else {
+          w = availW / 2; h = w / ratio;
+        }
+        w = Math.max(80, w * zoom);
+        h = Math.max(100, h * zoom);
+
+        paneLeft.style.width  = w + 'px';
+        paneLeft.style.height = h + 'px';
+        paneRight.style.width  = w + 'px';
+        paneRight.style.height = h + 'px';
+        bookStage.style.width  = (w * 2) + 'px';
+        bookStage.style.height = h + 'px';
+        bookStage.style.boxShadow = 'var(--shadow-page)';
+      } else {
+        // Fit single page
+        let w, h;
+        if ((availW / availH) > ratio) {
+          h = availH; w = h * ratio;
+        } else {
+          w = availW; h = w / ratio;
+        }
+        w = Math.max(80, w * zoom);
+        h = Math.max(100, h * zoom);
+
+        paneRight.style.width  = w + 'px';
+        paneRight.style.height = h + 'px';
+        bookStage.style.width  = w + 'px';
+        bookStage.style.height = h + 'px';
+        bookStage.style.boxShadow = 'var(--shadow-page)';
+        paneLeft.style.width = '0';
+        paneLeft.style.height = h + 'px';
+      }
+    }
+
+    // ── RENDER PAGE ON CANVAS ────────────────────────────
+    // First tries cache (instant), then falls back to live render
+    function renderOn(pageNum, canvasId, scale) {
+      const canvas = $(canvasId);
+      if (!canvas) return Promise.resolve();
+
+      if (!pageNum || pageNum < 1 || pageNum > totalPages) {
+        drawBlank(canvas);
+        return Promise.resolve();
+      }
+
+      // ── Instant from cache ──
+      if (!scale && drawCached(pageNum, canvas)) {
+        return Promise.resolve();
+      }
+
+      // ── Live render (flip sheet or cache miss) ──
+      scale = scale || (2.0 * zoom);
+      return new Promise(resolve => {
+        getPage(pageNum).then(page => {
+          const vp = page.getViewport({ scale });
+          canvas.width  = vp.width;
+          canvas.height = vp.height;
+          const ctx = canvas.getContext('2d');
+          page.render({ canvasContext: ctx, viewport: vp }).promise
+            .then(() => {
+              // Update cache after live render (if supported)
+              if (typeof createImageBitmap !== 'undefined' && (!scale || scale === 2.0 * zoom)) {
+                try {
+                  createImageBitmap(canvas).then(bm => pageCache.set(pageNum, bm)).catch(() => {});
+                } catch(e) {}
+              }
+              resolve();
+            }).catch(resolve);
+        }).catch(resolve);
+      });
+    }
+
+    // ── RENDER ACTIVE VIEW ───────────────────────────────
+    function renderActiveView() {
+      if (!interiorDoc) return;
+      resizeBook();
+      updateIndicators();
+
+      const [leftN, rightN] = getSpread(curPage);
+      const isViewDouble = (leftN !== null && rightN !== null);
+
+      if (isViewDouble) {
+        paneLeft.classList.remove('single');
+        paneRight.classList.remove('single');
+        spine.classList.remove('hidden');
+
+        // Try instant cache draw first — no loader needed
+        const leftHit  = leftN  ? drawCached(leftN,  $('cv-left'))  : (drawBlank($('cv-left')), true);
+        const rightHit = rightN ? drawCached(rightN, $('cv-right')) : (drawBlank($('cv-right')), true);
+
+        if (!leftHit || !rightHit) {
+          // Cache miss: render and update
+          showMiniLoader('Chargement…');
+          Promise.all([
+            leftHit  ? Promise.resolve() : renderOn(leftN,  'cv-left'),
+            rightHit ? Promise.resolve() : renderOn(rightN, 'cv-right')
+          ]).then(hideMiniLoader);
+        }
+      } else {
+        paneLeft.classList.add('single');
+        paneRight.classList.add('single');
+        spine.classList.add('hidden');
+        slideWrap.style.display = 'none';
+        $('cv-right').style.display = 'block';
+
+        const activePage = (leftN !== null) ? leftN : rightN;
+        // Try instant from cache
+        const hit = drawCached(activePage, $('cv-right'));
+        if (!hit) {
+          showMiniLoader('Chargement…');
+          renderOn(activePage, 'cv-right').then(hideMiniLoader);
+        }
+      }
+
+      highlightThumb();
+      evictCache(curPage);
+      schedulePrefetch(curPage);
+    }
+
+    function updateIndicators() {
+      pgCur.textContent = curPage;
+      pgTotal.textContent = totalPages;
+      scrubber.value = curPage;
+    }
+
+    // ── PAGE SLIDE TRANSITION (single page) ─────────────
+    function slideTransition(targetPage, dir) {
+      isFlipping = true;
+
+      const cvRight = $('cv-right');
+      const cvA = $('cv-sl-a');
+      const cvB = $('cv-sl-b');
+
+      // Snapshot current into A
+      cvA.width  = cvRight.width;
+      cvA.height = cvRight.height;
+      cvA.getContext('2d').drawImage(cvRight, 0, 0);
+
+      cvRight.style.display = 'none';
+      slideWrap.style.display = 'block';
+
+      // Position A (current) and B (incoming)
+      slA.style.transition = 'none';
+      slB.style.transition = 'none';
+      slA.style.transform  = 'translateX(0)';
+      slA.style.opacity    = '1';
+      slB.style.transform  = dir === 'next' ? 'translateX(100%)' : 'translateX(-100%)';
+      slB.style.opacity    = '1';
+
+      // Draw incoming immediately from cache if available,
+      // otherwise render then start animation
+      const startAnim = () => {
+        void slB.offsetHeight; // force reflow
+        const dur  = '0.36s';
+        const ease = 'cubic-bezier(0.3, 1, 0.4, 1)';
+        slA.style.transition = `transform ${dur} ${ease}`;
+        slB.style.transition = `transform ${dur} ${ease}`;
+        slA.style.transform  = dir === 'next' ? 'translateX(-100%)' : 'translateX(100%)';
+        slB.style.transform  = 'translateX(0)';
+
+        setTimeout(() => {
+          curPage = targetPage;
+          // Copy B into main canvas
+          cvRight.width  = cvB.width;
+          cvRight.height = cvB.height;
+          cvRight.getContext('2d').drawImage(cvB, 0, 0);
+          slideWrap.style.display = 'none';
+          cvRight.style.display   = 'block';
+          isFlipping = false;
+          updateIndicators();
+          highlightThumb();
+          evictCache(curPage);
+          schedulePrefetch(curPage);
+        }, 370);
+      };
+
+      const cached = drawCached(targetPage, cvB);
+      if (cached) {
+        startAnim(); // instant — no wait
+      } else {
+        renderOn(targetPage, 'cv-sl-b').then(startAnim);
+      }
+    }
+
+    // ── PREMIUM FADE TRANSITION (double page desktop) ────
+    function fadeTransition(targetPage, done) {
+      isFlipping = true;
+      bookStage.style.transition = 'opacity 0.16s ease-in-out';
+      bookStage.style.opacity = '0.2';
+
+      const [leftN, rightN] = getSpread(targetPage);
+
+      Promise.all([
+        leftN  ? prerenderPage(leftN)  : Promise.resolve(),
+        rightN ? prerenderPage(rightN) : Promise.resolve()
+      ]).then(() => {
+        setTimeout(() => {
+          curPage = targetPage;
+          renderActiveView();
+          bookStage.style.opacity = '1';
+
+          setTimeout(() => {
+            bookStage.style.transition = '';
+            isFlipping = false;
+            if (done) done();
+          }, 160);
+        }, 160);
+      });
+    }
+
+    // ── NAVIGATION ───────────────────────────────────────
+    function nextPage() {
+      if (isFlipping || !interiorDoc) return;
+      onInteraction();
+
+      let target;
+      if (isDouble) {
+        if (curPage === 1) {
+          target = 2;
+        } else if (curPage === 6 || curPage === 7) {
+          target = 8;
+        } else if (curPage === 8) {
+          target = 9;
+        } else if (curPage >= 9) {
+          if (curPage % 2 === 1) {
+            target = curPage + 2;
+          } else {
+            target = curPage + 1;
+          }
+        } else {
+          if (curPage % 2 === 0) {
+            target = curPage + 2;
+          } else {
+            target = curPage + 1;
+          }
+        }
+        if (target > totalPages) target = totalPages;
+      } else {
+        target = curPage + 1;
+      }
+      if (target > totalPages) return;
+
+      if (!isDouble) {
+        slideTransition(target, 'next');
+      } else {
+        fadeTransition(target);
+      }
+    }
+
+    function prevPage() {
+      if (isFlipping || !interiorDoc) return;
+      onInteraction();
+
+      let target;
+      if (isDouble) {
+        if (curPage === totalPages) {
+          target = totalPages - 1;
+          if (target >= 9 && target % 2 === 0) {
+            target = target - 1;
+          } else if (target < 9 && target % 2 !== 0) {
+            target = target - 1;
+          }
+        } else if (curPage === 2 || curPage === 3) {
+          target = 1;
+        } else if (curPage === 8) {
+          target = 6;
+        } else if (curPage === 9 || curPage === 10) {
+          target = 8;
+        } else if (curPage >= 11) {
+          if (curPage % 2 === 1) {
+            target = curPage - 2;
+          } else {
+            target = curPage - 3;
+          }
+        } else {
+          if (curPage % 2 === 0) {
+            target = curPage - 2;
+          } else {
+            target = curPage - 3;
+          }
+        }
+      } else {
+        target = curPage - 1;
+      }
+      if (target < 1) return;
+
+      if (!isDouble) {
+        slideTransition(target, 'prev');
+      } else {
+        fadeTransition(target);
+      }
+    }
+
+    function goToPage(n) {
+      if (!interiorDoc || isFlipping) return;
+      n = Math.max(1, Math.min(totalPages, n));
+      curPage = n;
+      renderActiveView();
+      if (sidebarOpen && window.innerWidth < 768) closeSidebar();
+    }
+
+    // ── LAYOUT ADAPTATION ────────────────────────────────
+    function checkLayout() {
+      const isMob = window.innerWidth < 768;
+      const was = isDouble;
+      if (isMob) {
+        isDouble = false;
+      } else {
+        isDouble = true;
+      }
+      const layoutBtn = $('btn-layout');
+      layoutBtn.classList.toggle('on', isDouble);
+      if (was !== isDouble) { resizeBook(); renderActiveView(); }
+    }
+
+    function toggleLayout() {
+      if (window.innerWidth < 768) { showToast('Double page disponible sur grand écran'); return; }
+      isDouble = !isDouble;
+      $('btn-layout').classList.toggle('on', isDouble);
+      resizeBook();
+      renderActiveView();
+    }
+
+    // ── ZOOM ─────────────────────────────────────────────
+    function zoomIn()  { zoom = Math.min(2.5, zoom + 0.15); resizeBook(); renderActiveView(); }
+    function zoomOut() { zoom = Math.max(0.5, zoom - 0.15); resizeBook(); renderActiveView(); }
+
+    // ── THUMBNAILS ───────────────────────────────────────
+    function buildThumbs() {
+      thumbScroll.innerHTML = '';
+      sbTotal.textContent = totalPages + ' pages';
+      for (let i = 1; i <= totalPages; i++) {
+        const item = document.createElement('div');
+        item.className = 'thumb-item';
+        item.id = 'th-' + i;
+        item.setAttribute('role', 'button');
+        item.setAttribute('tabindex', '0');
+        item.setAttribute('aria-label', 'Aller à la page ' + i);
+        item.onclick = () => goToPage(i);
+        item.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') goToPage(i); };
+
+        const box = document.createElement('div');
+        box.className = 'thumb-canvas-box';
+        const cv = document.createElement('canvas');
+        cv.id = 'tcv-' + i;
+        box.appendChild(cv);
+
+        const lbl = document.createElement('div');
+        lbl.className = 'thumb-lbl';
+        lbl.textContent = 'Page ' + i;
+
+        item.appendChild(box);
+        item.appendChild(lbl);
+        thumbScroll.appendChild(item);
+
+        // Lazy render thumbnails with slight delay to not block UI
+        setTimeout(() => renderThumb(i, cv), i * 18);
+      }
+    }
+
+    function renderThumb(n, canvas) {
+      getPage(n).then(page => {
+        const vp = page.getViewport({ scale: 0.3 });
+        canvas.width  = vp.width;
+        canvas.height = vp.height;
+        page.render({ canvasContext: canvas.getContext('2d'), viewport: vp });
+      }).catch(() => {});
+    }
+
+    function highlightThumb() {
+      document.querySelectorAll('.thumb-item').forEach(el => el.classList.remove('active'));
+      const t = $('th-' + curPage);
+      if (t) {
+        t.classList.add('active');
+        if (sidebarOpen) t.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+
+    // ── INITIALISE PDFs ──────────────────────────────────
+    function initTriplePDF(coverFrontData, interiorData, coverBackData) {
+      setLoaderTxt('Analyse des documents…');
+      const p1 = pdfjsLib.getDocument({ data: coverFrontData }).promise;
+      const p2 = pdfjsLib.getDocument({ data: interiorData }).promise;
+      const p3 = pdfjsLib.getDocument({ data: coverBackData }).promise;
+      Promise.all([p1, p2, p3]).then(([coverFront, interior, coverBack]) => {
+        coverDoc     = coverFront;
+        interiorDoc  = interior;
+        coverBackDoc = coverBack;
+        totalPages   = 1 + Math.max(0, interior.numPages - 2) + 1;
+        curPage = 1;
+        scrubber.max = totalPages;
+        pgTotal.textContent = totalPages;
+        sbTotal.textContent = totalPages + ' pages';
+
+        interior.getPage(1).then(pg => {
+          const vp = pg.getViewport({ scale: 1 });
+          pgW = vp.width;
+          pgH = vp.height;
+          checkLayout();
+          resizeBook();
+          // Pre-render first few pages before showing UI
+          setLoaderTxt('Pré-rendu des premières pages…');
+          prerenderPage(1).then(() => {
+            prerenderPage(2);
+            prerenderPage(3);
+            renderActiveView();
+            buildThumbs();
+            hideInitLoader();
+            scheduleHudHide(5000);
+            showToast('📖 ' + totalPages + ' pages chargées');
+            schedulePrefetch(1);
+          });
+        });
+      }).catch(err => {
+        console.error('initTriplePDF error:', err);
+        showFallback('Erreur lors du chargement des fichiers PDF.<br>Veuillez les déposer manuellement.');
+      });
+    }
+
+    function initDualPDF(coverData, interiorData) {
+      setLoaderTxt('Analyse des documents…');
+      const p1 = pdfjsLib.getDocument({ data: coverData }).promise;
+      const p2 = pdfjsLib.getDocument({ data: interiorData }).promise;
+      Promise.all([p1, p2]).then(([cover, interior]) => {
+        coverDoc     = cover;
+        interiorDoc  = interior;
+        coverBackDoc = null;
+        totalPages   = 2 + interior.numPages;
+        curPage = 1;
+        scrubber.max = totalPages;
+        pgTotal.textContent = totalPages;
+        sbTotal.textContent = totalPages + ' pages';
+
+        interior.getPage(1).then(pg => {
+          const vp = pg.getViewport({ scale: 1 });
+          pgW = vp.width;
+          pgH = vp.height;
+          checkLayout();
+          resizeBook();
+          // Pre-render first few pages before showing UI
+          setLoaderTxt('Pré-rendu des premières pages…');
+          prerenderPage(1).then(() => {
+            prerenderPage(2);
+            prerenderPage(3);
+            renderActiveView();
+            buildThumbs();
+            hideInitLoader();
+            scheduleHudHide(5000);
+            showToast('📖 ' + totalPages + ' pages chargées');
+            schedulePrefetch(1);
+          });
+        });
+      }).catch(err => {
+        console.error('initDualPDF error:', err);
+        showFallback('Erreur lors du chargement des fichiers PDF.<br>Veuillez les déposer manuellement.');
+      });
+    }
+
+    function initSinglePDF(data) {
+      setLoaderTxt('Analyse du document…');
+      pdfjsLib.getDocument({ data }).promise.then(pdf => {
+        coverDoc    = pdf;
+        interiorDoc = pdf;
+        totalPages  = pdf.numPages;
+        curPage = 1;
+        scrubber.max = totalPages;
+
+        pdf.getPage(1).then(pg => {
+          const vp = pg.getViewport({ scale: 1 });
+          pgW = vp.width;
+          pgH = vp.height;
+          checkLayout();
+          resizeBook();
+          renderActiveView();
+          buildThumbs();
+          hideInitLoader();
+          scheduleHudHide(5000);
+          showToast('📖 ' + totalPages + ' pages chargées');
+        });
+      }).catch(err => {
+        console.error('initSinglePDF error:', err);
+        showFallback();
+      });
+    }
+
+    // ── AUTO-LOAD (Base64 embedded) ──────────────────────
+    function tryEmbedded() {
+      const coverB64     = window.COVER_PDF_BASE64     || '';
+      const interiorB64  = window.INTERIOR_PDF_BASE64  || '';
+      const coverBackB64 = window.COVER_BACK_PDF_BASE64 || '';
+      if (coverB64 && interiorB64 && coverBackB64) {
+        setLoaderTxt('Décompression des données…');
+        requestAnimationFrame(() => setTimeout(() => {
+          try {
+            const cArr  = b64ToUint8(coverB64);
+            const iArr  = b64ToUint8(interiorB64);
+            const cbArr = b64ToUint8(coverBackB64);
+            initTriplePDF(cArr, iArr, cbArr);
+          } catch(e) {
+            console.warn('b64 decode error:', e);
+            tryFetch();
+          }
+        }, 10));
+        return true;
+      } else if (coverB64 && interiorB64) {
+        setLoaderTxt('Décompression des données…');
+        requestAnimationFrame(() => setTimeout(() => {
+          try {
+            const cArr = b64ToUint8(coverB64);
+            const iArr = b64ToUint8(interiorB64);
+            initDualPDF(cArr, iArr);
+          } catch(e) {
+            console.warn('b64 decode error:', e);
+            tryFetch();
+          }
+        }, 10));
+        return true;
+      }
+      return false;
+    }
+
+    // ── AUTO-LOAD (HTTP Fetch – needs a server) ──────────
+    function tryFetch() {
+      setLoaderTxt('Chargement des fichiers PDF…');
+      const fetchPDF = url => fetch(url).then(r => {
+        if (!r.ok) throw new Error(r.status);
+        return r.arrayBuffer().then(b => new Uint8Array(b));
+      });
+      Promise.all([fetchPDF(COVER_PDF_URL), fetchPDF(INTERIOR_PDF_URL), fetchPDF(COVER_BACK_PDF_URL)])
+        .then(([cArr, iArr, cbArr]) => initTriplePDF(cArr, iArr, cbArr))
+        .catch(err => {
+          console.warn('fetch triple failed, trying dual:', err);
+          Promise.all([fetchPDF(COVER_PDF_URL), fetchPDF(INTERIOR_PDF_URL)])
+            .then(([cArr, iArr]) => initDualPDF(cArr, iArr))
+            .catch(err2 => {
+              console.warn('fetch dual failed:', err2);
+              showFallback();
+            });
+        });
+    }
+
+    // ── MANUAL LOAD (drag-drop / file picker) ────────────
+    function loadFile(file) {
+      if (!file || file.type !== 'application/pdf') {
+        showToast('⚠️ Veuillez sélectionner un fichier PDF');
+        return;
+      }
+      setLoaderTxt('Traitement du fichier…');
+      fallback.classList.remove('show');
+      loader.classList.remove('fade', 'gone');
+      const fr = new FileReader();
+      fr.onload = () => initSinglePDF(new Uint8Array(fr.result));
+      fr.onerror = () => showFallback('Erreur de lecture du fichier.');
+      fr.readAsArrayBuffer(file);
+    }
+
+    // ── DRAG & DROP ──────────────────────────────────────
+    window.addEventListener('dragover', e => {
+      e.preventDefault();
+      document.body.classList.add('dragging');
+    }, { passive: false });
+    window.addEventListener('dragleave', e => {
+      if (!e.relatedTarget || e.relatedTarget === document.documentElement)
+        document.body.classList.remove('dragging');
+    });
+    window.addEventListener('drop', e => {
+      e.preventDefault();
+      document.body.classList.remove('dragging');
+      const f = e.dataTransfer.files[0];
+      if (f) loadFile(f);
+    });
+
+    $('btn-pick').addEventListener('click', () => $('file-input').click());
+    $('file-input').addEventListener('change', e => {
+      if (e.target.files[0]) loadFile(e.target.files[0]);
+    });
+    $('drop-zone').addEventListener('click', () => $('file-input').click());
+
+    // ── SCRUBBER ─────────────────────────────────────────
+    scrubber.addEventListener('input', e => {
+      const v = parseInt(e.target.value);
+      scrubTip.textContent = 'Page ' + v;
+      scrubTip.classList.add('show');
+      // Position tip above thumb
+      const pct = (v - 1) / Math.max(1, totalPages - 1);
+      const rect = scrubber.getBoundingClientRect();
+      scrubTip.style.left = (rect.left + pct * rect.width) + 'px';
+    });
+    scrubber.addEventListener('change', e => {
+      scrubTip.classList.remove('show');
+      goToPage(parseInt(e.target.value));
+    });
+    scrubber.addEventListener('pointerup', () => scrubTip.classList.remove('show'));
+
+    // ── BUTTON EVENTS ────────────────────────────────────
+    $('btn-prev').addEventListener('click',   prevPage);
+    $('btn-next').addEventListener('click',   nextPage);
+    $('btn-index').addEventListener('click',  toggleSidebar);
+    $('btn-theme').addEventListener('click',  cycleTheme);
+    $('btn-fs').addEventListener('click',     toggleFullScreen);
+    $('btn-layout').addEventListener('click', toggleLayout);
+    $('btn-zoom-in').addEventListener('click',  zoomIn);
+    $('btn-zoom-out').addEventListener('click', zoomOut);
+    $('ea-prev').addEventListener('click', prevPage);
+    $('ea-next').addEventListener('click', nextPage);
+
+    // ── CLICK ON READER (tap zones via position) ─────────
+    reader.addEventListener('click', e => {
+      // Ignore clicks on the HUD buttons or sidebar
+      if (e.target.closest('#top-bar,#bottom-bar,#sidebar,#sidebar-overlay,#fallback,#loader')) return;
+      const r = reader.getBoundingClientRect();
+      const x = e.clientX - r.left;
+      const w = r.width;
+      const zone = x / w;
+      if (zone < 0.25)      prevPage();
+      else if (zone > 0.75) nextPage();
+      else                  toggleHud();
+    });
+
+    // ── KEYBOARD ─────────────────────────────────────────
+    window.addEventListener('keydown', e => {
+      switch (e.key) {
+        case 'ArrowRight': case ' ': e.preventDefault(); nextPage(); break;
+        case 'ArrowLeft':            e.preventDefault(); prevPage(); break;
+        case '+': case '=':          zoomIn();  break;
+        case '-':                    zoomOut(); break;
+        case 'Escape':
+          if (sidebarOpen) closeSidebar();
+          else if (!hudVisible) showHud();
+          break;
+        case 'f': case 'F':          toggleFullScreen(); break;
+      }
+    });
+
+    // ── TOUCH SWIPE ──────────────────────────────────────
+    let tx0 = 0, ty0 = 0;
+    window.addEventListener('touchstart', e => {
+      tx0 = e.changedTouches[0].screenX;
+      ty0 = e.changedTouches[0].screenY;
+    }, { passive: true });
+    window.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].screenX - tx0;
+      const dy = e.changedTouches[0].screenY - ty0;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        if (dx < 0) nextPage(); else prevPage();
+      }
+    }, { passive: true });
+
+    // ── PINCH-TO-ZOOM ────────────────────────────────────
+    let pinchDist = null;
+    window.addEventListener('touchstart', e => {
+      if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        pinchDist = Math.hypot(dx, dy);
+      }
+    }, { passive: true });
+    window.addEventListener('touchmove', e => {
+      if (e.touches.length === 2 && pinchDist) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const d = Math.hypot(dx, dy);
+        const ratio = d / pinchDist;
+        if (ratio > 1.08) { zoomIn();  pinchDist = d; }
+        if (ratio < 0.92) { zoomOut(); pinchDist = d; }
+      }
+    }, { passive: true });
+    window.addEventListener('touchend', () => pinchDist = null, { passive: true });
+
+    // ── FULLSCREEN ───────────────────────────────────────
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+
+    // ── RESIZE ───────────────────────────────────────────
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        checkLayout();
+        resizeBook();
+        renderActiveView();
+      }, 150);
+    });
+
+    // ── BOOT ─────────────────────────────────────────────
+    applyTheme();
+    scheduleHudHide(6000);
+
+    // Small delay to let browser paint the loader first
+    setTimeout(() => {
+      if (!tryEmbedded()) {
+        tryFetch();
+      }
+    }, 100);
+
+  })();
+  </script>
+</body>
+</html>

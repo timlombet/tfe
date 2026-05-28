@@ -1,0 +1,6 @@
+{
+  "name": "TFE Tim Lombet - Mariemont",
+  "description": "Travail de fin d'études et portfolio interactif du stage en graphisme de Tim Lombet au Musée royal de Mariemont.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
